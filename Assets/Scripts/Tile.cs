@@ -37,7 +37,7 @@ public class Tile : MonoBehaviour
     public List<Tile> southWestTiles;
     public List<Tile> southEastTiles;
 
-
+    Vector3 ballStartPostion = new Vector3(0, 0.5f, 0);
     public GameObject hoverEffect;
 
     public Player Owner
@@ -75,9 +75,9 @@ public class Tile : MonoBehaviour
                         if (ball != null)
                         {
                             ball.gameObject.SetActive(true);
-                            Vector3 pos = ball.gameObject.transform.localPosition;
-                            ball.transform.localPosition = ball.transform.localPosition + Vector3.up;
-                            ball.transform.LeanMoveLocal(pos, GameHandler.Instance.ballDropSpeed);
+                            //Vector3 pos = ball.gameObject.transform.localPosition;
+                            ball.transform.localPosition = ballStartPostion + Vector3.up;
+                            ball.transform.LeanMoveLocal(ballStartPostion, GameHandler.Instance.ballDropSpeed);
                         }
                         meshRend.material.color = playerXColor;
                         break;
@@ -85,9 +85,10 @@ public class Tile : MonoBehaviour
                         if (ball != null)
                         {
                             ball.gameObject.SetActive(true);
-                            Vector3 pos = ball.gameObject.transform.localPosition;
-                            ball.transform.localPosition = ball.transform.localPosition + Vector3.up;
-                            ball.transform.LeanMoveLocal(pos, GameHandler.Instance.ballDropSpeed);
+                            //Vector3 pos = ball.gameObject.transform.localPosition;
+                            //ball.transform.localPosition = ball.transform.localPosition + Vector3.up;
+                            ball.transform.localPosition = ballStartPostion + Vector3.up;
+                            ball.transform.LeanMoveLocal(ballStartPostion, GameHandler.Instance.ballDropSpeed);
                         }
                         meshRend.material.color = playerOColor;
                         break;
@@ -105,7 +106,8 @@ public class Tile : MonoBehaviour
             GameHandler.Instance.currentPlayer == Player.Red && 
             GameHandler.Instance.gameEnded == false &&
             GameHandler.Instance.gameStarted &&
-            GameHandler.Instance.paused == false)
+            GameHandler.Instance.paused == false &&
+            GameHandler.Instance.canPlay)
         {
             Owner = GameHandler.Instance.currentPlayer; //also changes mesh
 
@@ -114,8 +116,8 @@ public class Tile : MonoBehaviour
             {
                 hoverEffect.SetActive(false);
             }
-
-            Invoke("NotifyHandler", 0.5f);
+            NotifyHandler();
+            //Invoke("NotifyHandler", 0.5f);
 
             if (GameHandler.Instance.debug)
             {
@@ -144,7 +146,8 @@ public class Tile : MonoBehaviour
             Owner == Player.None &&
             GameHandler.Instance.gameStarted &&
             GameHandler.Instance.paused == false &&
-            GameHandler.Instance.gameEnded == false) 
+            GameHandler.Instance.gameEnded == false &&
+            GameHandler.Instance.canPlay) 
         {
             hoverEffect.SetActive(true);
         }

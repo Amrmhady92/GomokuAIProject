@@ -62,6 +62,7 @@ public class GameHandler : MonoBehaviour
     public Player currentPlayer = Player.Red;
     public bool gameEnded = false;
     public bool gameStarted = false;
+    public bool canPlay = true;
     public bool paused = false;
 
     public GameObject gamecamera;
@@ -132,8 +133,8 @@ public class GameHandler : MonoBehaviour
         {
             RestartPressed();
         }
-
-        playsCounter.text = "Plays: " + plays;
+        plays = (tileBuilder.boardSizeX * tileBuilder.boardSizeZ - unplayedTiles.Count);
+        playsCounter.text = "Plays: " + plays ;
     }
 
     #region UI Buttons
@@ -157,12 +158,15 @@ public class GameHandler : MonoBehaviour
         unhideWinnerTextButton.SetActive(false);
         confirmMenuWindow.SetActive(false);
         paused = false;
+        canPlay = true;
         gameEndedCarrier.SetActive(false);
         unplayedTiles = new List<Tile>(tiles);
         for (int i = 0; i < exitAndRestartButtons.Length; i++)
         {
             exitAndRestartButtons[i].SetActive(true);
         }
+
+        StopAllCoroutines();
     }
 
     public void OnConfirmExitPressed()
@@ -217,7 +221,10 @@ public class GameHandler : MonoBehaviour
 
         unplayedTiles.Remove(playedTile);
 
-        plays++; // check how many plays to know if all tiles played
+        canPlay = false;
+        StartCoroutine(WaitThenDo(0.5f, () => { canPlay = true; }));
+
+        //plays++; // check how many plays to know if all tiles played
 
         
 
@@ -511,10 +518,14 @@ public class GameHandler : MonoBehaviour
 
         if (tileToPlay != null) 
         {
-            tileToPlay.PlayTile(currentPlayer);
+            StartCoroutine(WaitThenDo(UnityEngine.Random.Range(0.5f, 0.7f), () => 
+            {
+                tileToPlay.PlayTile(currentPlayer);
+                DebugTile(tileToPlay);
+            }));
+            
 
             //Debug see neighbours .
-            DebugTile(tileToPlay);
         }
         else
         {
@@ -647,7 +658,7 @@ public class GameHandler : MonoBehaviour
             if(mustPlayTiles.Count > 0)// If we have those , we dont care about the rest
             {
                 tile = mustPlayTiles[0];
-                Debug.Log("mustPlayTiles " + mustPlayTiles.Count);
+                if (debug) Debug.Log("mustPlayTiles " + mustPlayTiles.Count);
                 for (int i = 0; i < mustPlayTiles.Count; i++)
                 {
                     if (mustPlayTiles[i].streakRed >= tile.streakRed) // get the tile with highest streak to be the most important to play if we will lose
@@ -753,5 +764,11 @@ public class GameHandler : MonoBehaviour
         Debug.Log(tileNames);
     }
 
+    IEnumerator WaitThenDo(float wait, System.Action callback)
+    {
 
+        yield return new WaitForSeconds(wait);
+        callback?.Invoke();
+    
+    }
 }
