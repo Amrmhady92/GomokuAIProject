@@ -1431,11 +1431,12 @@ MonoBehaviour:
   gamecamera: {fileID: 519420028}
   cameraDestentation: {fileID: 1951261118}
   moveSpeed: 2.5
-  attackScoreModifier: 5
-  defenceScoreModifier: 5
+  attackScoreModifier: 2
+  defenceScoreModifier: 3
   emptyScoreModifier: 0
   ballDropSpeed: 0.2
   debug: 0
+  fullDebug: 0
   hideWinnerTextButton: {fileID: 1908890953}
   gameEndedCarrier: {fileID: 1171816177}
   gameEndingText: {fileID: 660063830}

@@ -35,6 +35,22 @@ public struct DirectionStreak
 
     public int redsMax;
     public int bluesMax;
+
+    public bool redsBlocked;
+    public bool bluesBlocked;
+   // public bool emptyNear;
+
+
+
+    public DirectionStreak(int reds = 0, int blues =0 , int redsMax = 0, int bluesMax = 0 , bool redsBlocked = false, bool bluesBlocked = false)
+    {
+        this.reds = reds;
+        this.blues = blues;
+        this.redsMax = redsMax;
+        this.bluesMax = bluesMax;
+        this.redsBlocked = redsBlocked;
+        this.bluesBlocked = bluesBlocked;
+    }
 }
 
 public class GameHandler : MonoBehaviour
@@ -58,6 +74,7 @@ public class GameHandler : MonoBehaviour
 
     public float ballDropSpeed = 0.2f;
     public bool debug = true;
+    public bool fullDebug = true;
 
     public GameObject hideWinnerTextButton;
     public GameObject gameEndedCarrier;
@@ -489,7 +506,7 @@ public class GameHandler : MonoBehaviour
         for (int i = 0; i < unplayedTiles.Count; i++)
         {
 
-            if (tiles[i].Owner != Player.None) continue;
+            if (unplayedTiles[i].Owner != Player.None) continue; //should never pass
 
             tile = unplayedTiles[i];
             tile.mustDefendTile = false;
@@ -519,13 +536,22 @@ public class GameHandler : MonoBehaviour
 
             //if (clear)
             //{
-
+            Axis[] allAxis = { Axis.Horizontal, Axis.Vertical, Axis.DiagonalLeftToRight, Axis.DiagonalRightToLeft };
             DirectionStreak streakData;
-            for (int j = 1; j < (int)Axis.Count; j++)
+            for (int j = 0; j < allAxis.Length; j++)
             {
-                streakData = tile.GetStreakInAxis((Axis)j);
+                streakData = tile.GetStreakInAxis(allAxis[j]);
+
                 totalBlues = streakData.blues;
                 totalReds = streakData.reds;
+
+                if (totalBlues >= 4) // Found Win no need to continue
+                {
+                    tile.winningTile = true; // This will make the tile picked anyway
+                    Debug.Log("Found Winning Tile");
+                    return tile; //leave the scoring
+                }
+
 
                 tile.streakBlue = totalBlues >= tile.streakBlue ? totalBlues : tile.streakBlue;//debuging
                 tile.streakRed = totalReds >= tile.streakRed ? totalReds : tile.streakRed;
@@ -533,25 +559,26 @@ public class GameHandler : MonoBehaviour
                 int scoreDef = totalReds * defenceScoreModifier;
                 int scoreAtt = totalBlues * attackScoreModifier;
 
-                if (totalBlues >= 4)
-                {
-                    tile.winningTile = true; // This will make the tile picked anyway
-                    Debug.Log("Winning Tile");
-                    return tile; // no need to try
-                }
 
-                if (totalReds >= 3 && streakData.redsMax >= 4)
+                //This ignores the scores
+                if (totalReds >= 3 && streakData.redsMax >= 4 && streakData.redsBlocked == false) //must catch a 3 before player makes 4 // if streak max is less that 4 then its useless to def // also if blocked is worth less
                 {
                     //a must def tile
                     //will make it ignore the modifiers
                     tile.mustDefendTile = true;
                 }
-
+                else if((totalReds >= 3 && streakData.redsMax < 4)) // debugging
+                {
+                    Debug.Log("Not scary");
+                }
 
                 // if a almost win or player played a 3, then score is multiplied by 100
-                if (totalReds >= 3 && totalReds < 4 && streakData.redsMax >= 4) scoreDef *= 100;
-                if (totalBlues >= 3 && totalBlues < 4 && streakData.bluesMax >= 4) scoreAtt *= 100;
-                //This ignores the scores
+                if (totalReds == 3 && streakData.redsMax >= 4 && streakData.redsBlocked == false) scoreDef *= 100;
+                else if(totalReds == 3 && streakData.redsMax >= 4 && streakData.redsBlocked == true) scoreDef *= 50;
+
+                if (totalBlues == 3 && streakData.bluesMax >= 4 && streakData.bluesBlocked == false) scoreAtt *= 100;
+                else if(totalBlues == 3 && streakData.bluesMax >= 4 && streakData.bluesBlocked == true) scoreDef *= 50; // if we have e r r r b will be worth less than e r r r e  (e = empty)
+
 
                 // totalBlues and totalReds are the streaks of blues and reds in each direction
                 // usually first time added can be low not more than 4 on streak, since 5 is a win/lose (if one side) anyway
@@ -560,8 +587,8 @@ public class GameHandler : MonoBehaviour
 
                 int newFinalScore = tile.attackScore >= tile.defenceScore ? tile.attackScore : tile.defenceScore;
 
-
                 tile.finalScore = newFinalScore >= tile.finalScore ? newFinalScore : tile.finalScore;
+                //if (streakData.emptyNear) tile.finalScore *= 2;
             }
 
             #region OLD
@@ -776,7 +803,6 @@ public class GameHandler : MonoBehaviour
                     mustPlayTiles.Add(unplayedTiles[i]);
                     unplayedTiles[i].mustDefendTile = false;
                 }
-
             }
 
             if(mustPlayTiles.Count > 0)
@@ -794,7 +820,7 @@ public class GameHandler : MonoBehaviour
             }
             else if(playableTiles.Count > 0)
             {
-                Debug.Log("playableTiles " + playableTiles.Count);
+                //Debug.Log("playableTiles " + playableTiles.Count);
                 tile = playableTiles.GetRandomValue();
             }
 
@@ -805,10 +831,11 @@ public class GameHandler : MonoBehaviour
         return tile;
     }
 
-    public void DebugTile(Tile tile, bool playerclicked = false, bool fullDebug = false)
+    public void DebugTile(Tile tile, bool playerclicked = false)
     {
-        if (!debug) return;
-        string tileNames = "";
+        if (!fullDebug) return;
+        //if (!fullDebug) return;
+        string tileNames = "AI tile\n";
         if (playerclicked) tileNames = "Player Clk\n";
 
         tileNames += "StreakRed = " + tile.streakRed + " || Streak Blue = " + tile.streakBlue + "\n";

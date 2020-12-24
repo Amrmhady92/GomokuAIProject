@@ -191,8 +191,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d056ce45d81b3c140a49b24ae402b76c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  owner: 0
   attackScore: 0
   defenceScore: 0
+  finalScore: 0
+  winningTile: 0
+  mustDefendTile: 0
+  streakRed: 0
+  streakBlue: 0
+  maxStreakRed: 0
+  maxStreakBlue: 0
   x: 0
   y: 0
   z: 0
@@ -233,7 +241,7 @@ Transform:
   m_GameObject: {fileID: 5014471384766795492}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0.5, z: 0}
-  m_LocalScale: {x: 0.4, y: 0.4, z: 0.4}
+  m_LocalScale: {x: 0.45, y: 0.45, z: 0.45}
   m_Children: []
   m_Father: {fileID: 6799115766987089586}
   m_RootOrder: 0
@@ -265,7 +273,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 10303, guid: 0000000000000000f000000000000000, type: 0}
+  - {fileID: 2100000, guid: 1d276fecbac25944d92e65db36ddc1e7, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0

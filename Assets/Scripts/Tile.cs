@@ -110,7 +110,24 @@ public class Tile : MonoBehaviour
             Owner = GameHandler.Instance.currentPlayer; //also changes mesh
             Invoke("NotifyHandler", 0.5f);
 
-            if (GameHandler.Instance.debug) GameHandler.Instance.DebugTile(this, true);
+            if (GameHandler.Instance.debug)
+            {
+                DirectionStreak fromHori = GetStreakInAxis(Axis.Horizontal);
+                DirectionStreak fromVerti = GetStreakInAxis(Axis.Vertical);
+                DirectionStreak fromDiagonalRight = GetStreakInAxis(Axis.DiagonalRightToLeft);
+                DirectionStreak fromDiagonaLeft = GetStreakInAxis(Axis.DiagonalLeftToRight);
+
+                string values = "";
+
+                values += "R: " + fromHori.reds + " || B: " + fromHori.blues +" STM R: "+ fromHori.redsMax + " || STM B: " + fromHori.bluesMax + " Horizontal \n";
+                values += "R: " + fromVerti.reds + " || B: " + fromVerti.blues +" STM R: "+ fromVerti.redsMax + " || STM B: " + fromVerti.bluesMax + " Vertical \n";
+                values += "R: " + fromDiagonalRight.reds + " || B: " + fromDiagonalRight.blues +" STM R: "+ fromDiagonalRight.redsMax + " || STM B: " + fromDiagonalRight.bluesMax + " RtL NE > SW\n";
+                values += "R: " + fromDiagonaLeft.reds + " || B: " + fromDiagonaLeft.blues + " STM R: " + fromDiagonaLeft.redsMax + " || STM B: " + fromDiagonaLeft.bluesMax + " LtR NW > SE\n";
+  
+
+                Debug.Log("Selected Tile Data\n" + values);
+                //GameHandler.Instance.DebugTile(this, true);
+            }
         }
     }
 
@@ -129,11 +146,8 @@ public class Tile : MonoBehaviour
     
     public DirectionStreak GetStreakInDirection(Direction dir) // Vector 3 : X = Reds , Y = Blues
     {
-        DirectionStreak counts;
-        counts.reds = 0;
-        counts.blues = 0;
-        counts.redsMax = 0;
-        counts.bluesMax = 0;
+        DirectionStreak counts = new DirectionStreak();
+
 
         Player firstEncounter = Player.None;
         List<Tile> tmpDirLst = null;
@@ -186,15 +200,13 @@ public class Tile : MonoBehaviour
             if (tmpDirLst.Count > 0)
             {
                 firstEncounter = tmpDirLst[0].Owner;
+                bool broken = false;
                 if (firstEncounter != Player.None)
                 {
+                    //counts.emptyNear = false;
                     for (int i = 0; i < tmpDirLst.Count; i++)
                     {
 
-                        if (tmpDirLst[i].Owner != firstEncounter)
-                        {
-                            break;
-                        }
 
                         if (tmpDirLst[i].Owner == Player.None)
                         {
@@ -202,34 +214,82 @@ public class Tile : MonoBehaviour
                             {
                                 case Player.Red:
                                     counts.redsMax++;
+                                    counts.redsBlocked = false;
                                     break;
                                 case Player.Blue:
+                                    counts.bluesMax++;
+                                    counts.bluesBlocked = false;
+                                    break;
+                            }
+                            broken = true;
+                            //break;
+                        }
+                        else
+                        if (tmpDirLst[i].Owner == firstEncounter) 
+                        {
+                            if (broken) break;
+
+                            switch (firstEncounter)
+                            {
+                                case Player.Red: 
+                                    counts.reds++;
+                                    counts.redsMax++;
+
+                                    break;
+                                case Player.Blue:
+                                    counts.blues++;
                                     counts.bluesMax++;
                                     break;
                             }
                         }
-
-                        if (tmpDirLst[i].Owner == firstEncounter) 
+                        else
+                        if (tmpDirLst[i].Owner != firstEncounter)
                         {
                             switch (firstEncounter)
                             {
-                                case Player.Red: counts.reds++;
+                                case Player.Red:
+                                    if (!broken) counts.redsBlocked = true;
                                     break;
-                                case Player.Blue: counts.blues++;
+                                case Player.Blue:
+                                    if (!broken) counts.bluesBlocked = true;
                                     break;
                             }
+                            break;
                         }
                     }
                 }
-                else
+                else //First is empty ... Will just calculate streak
                 {
+                    //counts.emptyNear = true;
+
+                    //int maxEmpty = 0;
+                    //bool needEmpty = true;
                     for (int i = 0; i < tmpDirLst.Count; i++)
                     {
+                        if (tmpDirLst[i].Owner == Player.None && firstEncounter == Player.None)
+                        {
+                            counts.redsMax++;
+                            counts.bluesMax++;
+                            //maxEmpty++;
+                        }
+                        else
                         if (tmpDirLst[i].Owner != Player.None && firstEncounter == Player.None)
                         {
                             firstEncounter = tmpDirLst[i].Owner;
+                            switch (firstEncounter)
+                            {
+                                case Player.Red:
+                                    //counts.reds++;
+                                    counts.redsMax++;
+                                    break;
+                                case Player.Blue:
+                                    //counts.blues++;
+                                    counts.bluesMax++;
+                                    break;
+                            }
+                            //needEmpty = false;
                         }
-
+                        else
                         if (tmpDirLst[i].Owner == Player.None && firstEncounter != Player.None)
                         {
                             switch (firstEncounter)
@@ -242,26 +302,29 @@ public class Tile : MonoBehaviour
                                     break;
                             }
                         }
-
+                        else
                         if (tmpDirLst[i].Owner == firstEncounter && firstEncounter != Player.None)
                         {
+                           // needEmpty = false;
                             switch (firstEncounter)
                             {
                                 case Player.Red:
-                                    counts.reds++;
+                                    //counts.reds++;
                                     counts.redsMax++;
                                     break;
                                 case Player.Blue:
-                                    counts.blues++;
+                                    //counts.blues++;
                                     counts.bluesMax++;
                                     break;
                             }
                         }
-
+                        else
                         if (tmpDirLst[i].Owner != firstEncounter && firstEncounter != Player.None)
                         {
                             break;
                         }
+
+                        //if (maxEmpty >= 3 && needEmpty) break;
                     }
                 }
             }
@@ -304,7 +367,7 @@ public class Tile : MonoBehaviour
         }
 
         DirectionStreak countsLeft = GetStreakInDirection(left);
-        DirectionStreak countsRight = GetStreakInDirection(left);
+        DirectionStreak countsRight = GetStreakInDirection(right);
 
 
         countsLeft.reds += countsRight.reds;
