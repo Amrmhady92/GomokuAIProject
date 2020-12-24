@@ -1438,6 +1438,7 @@ MonoBehaviour:
   debug: 0
   fullDebug: 0
   hideWinnerTextButton: {fileID: 1908890953}
+  unhideWinnerTextButton: {fileID: 1826285101}
   gameEndedCarrier: {fileID: 1171816177}
   gameEndingText: {fileID: 660063830}
   playsCounter: {fileID: 1977326733}
@@ -1447,6 +1448,9 @@ MonoBehaviour:
   confirmationButtonText: {fileID: 1954301295}
   confirmButton: {fileID: 1143467690}
   confirmMenuWindow: {fileID: 1515193943}
+  exitAndRestartButtons:
+  - {fileID: 211046235}
+  - {fileID: 842325975}
 --- !u!4 &747838795
 Transform:
   m_ObjectHideFlags: 0
@@ -1543,18 +1547,6 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 747838794}
-        m_TargetAssemblyTypeName: GameHandler, Assembly-CSharp
-        m_MethodName: RestartPressed
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
       - m_Target: {fileID: 842325975}
         m_TargetAssemblyTypeName: UnityEngine.GameObject, UnityEngine
         m_MethodName: SetActive
@@ -1571,6 +1563,18 @@ MonoBehaviour:
         m_TargetAssemblyTypeName: UnityEngine.GameObject, UnityEngine
         m_MethodName: SetActive
         m_Mode: 6
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+      - m_Target: {fileID: 747838794}
+        m_TargetAssemblyTypeName: GameHandler, Assembly-CSharp
+        m_MethodName: RestartPressed
+        m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine

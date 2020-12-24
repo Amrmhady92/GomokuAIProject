@@ -1,8 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-
-
+using Unity;
 
 public class Tile : MonoBehaviour
 {
@@ -39,7 +38,7 @@ public class Tile : MonoBehaviour
     public List<Tile> southEastTiles;
 
 
-
+    public GameObject hoverEffect;
 
     public Player Owner
     {
@@ -99,7 +98,8 @@ public class Tile : MonoBehaviour
         }
     }
 
-    private void OnMouseDown()
+
+    public void OnMouseDown()
     {
         if(Owner == Player.None &&
             GameHandler.Instance.currentPlayer == Player.Red && 
@@ -108,6 +108,13 @@ public class Tile : MonoBehaviour
             GameHandler.Instance.paused == false)
         {
             Owner = GameHandler.Instance.currentPlayer; //also changes mesh
+
+
+            if (hoverEffect != null)
+            {
+                hoverEffect.SetActive(false);
+            }
+
             Invoke("NotifyHandler", 0.5f);
 
             if (GameHandler.Instance.debug)
@@ -128,6 +135,26 @@ public class Tile : MonoBehaviour
                 Debug.Log("Selected Tile Data\n" + values);
                 //GameHandler.Instance.DebugTile(this, true);
             }
+        }
+    }
+
+    private void OnMouseEnter()
+    {
+        if (hoverEffect != null && 
+            Owner == Player.None &&
+            GameHandler.Instance.gameStarted &&
+            GameHandler.Instance.paused == false &&
+            GameHandler.Instance.gameEnded == false) 
+        {
+            hoverEffect.SetActive(true);
+        }
+    }
+
+    private void OnMouseExit()
+    {
+        if (hoverEffect != null)
+        {
+            hoverEffect.SetActive(false);
         }
     }
 

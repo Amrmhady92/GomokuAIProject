@@ -77,6 +77,7 @@ public class GameHandler : MonoBehaviour
     public bool fullDebug = true;
 
     public GameObject hideWinnerTextButton;
+    public GameObject unhideWinnerTextButton;
     public GameObject gameEndedCarrier;
     public TextMeshProUGUI gameEndingText;
     public TextMeshProUGUI playsCounter;
@@ -90,6 +91,7 @@ public class GameHandler : MonoBehaviour
     public TextMeshProUGUI confirmationButtonText;
     public Button confirmButton;
     public GameObject confirmMenuWindow;
+    public GameObject[] exitAndRestartButtons;
 
     public static GameHandler Instance
     {
@@ -138,7 +140,29 @@ public class GameHandler : MonoBehaviour
 
     public void OnConfirmRestartPressed()
     {
-        SceneManager.LoadScene(0);
+        //SceneManager.LoadScene(0);
+        for (int i = 0; i < tiles.Count; i++)
+        {
+            tiles[i].Owner = Player.None;
+            tiles[i].winningTile = false;
+            tiles[i].streakRed = 0;
+            tiles[i].streakBlue = 0;
+        }
+
+        gameEnded = false;
+        gameEndingText.text = "";
+        plays = 0;
+        currentPlayer = Player.Red;
+        hideWinnerTextButton.SetActive(false);
+        unhideWinnerTextButton.SetActive(false);
+        confirmMenuWindow.SetActive(false);
+        paused = false;
+        gameEndedCarrier.SetActive(false);
+        unplayedTiles = new List<Tile>(tiles);
+        for (int i = 0; i < exitAndRestartButtons.Length; i++)
+        {
+            exitAndRestartButtons[i].SetActive(true);
+        }
     }
 
     public void OnConfirmExitPressed()
@@ -147,6 +171,11 @@ public class GameHandler : MonoBehaviour
     }
     public void RestartPressed()
     {
+        if(gameEnded)
+        {
+            OnConfirmRestartPressed();
+            return;
+        }
         confirmMenuWindow.SetActive(true);
         confirmationText.text = restartConfirmText;
         confirmationButtonText.text = "Restart";
@@ -476,7 +505,6 @@ public class GameHandler : MonoBehaviour
     }
     private void AIPlay()
     {
-        //if(plays < 3) unplayedTiles.GetRandomValue().PlayTile(currentPlayer); //Play randomly in the first 2 rounds
 
         Tile tileToPlay = ScoreTiles();
 
@@ -519,29 +547,17 @@ public class GameHandler : MonoBehaviour
             tile.maxStreakBlue = 100; // debug
             tile.winningTile = false;
 
-            //int bluesCounterLeft = 0;
-            //int bluesCounterRight = 0;
-            //int redsCounterLeft = 0;
-            //int redsCounterRight = 0;
-            //int minDoableStreakBlue = 0; // Incling empty tiles that can take blue or red
-            //int minDoableStreakRed = 0;  //
+         
             int totalBlues;
             int totalReds;
-            //List<Tile> directionList = new List<Tile>();
-            //int side = 0;
-            //bool clear = false;
-            //bool streakEndRed = false;
-            //bool streakEndBlue = false;
 
-
-            //if (clear)
-            //{
             Axis[] allAxis = { Axis.Horizontal, Axis.Vertical, Axis.DiagonalLeftToRight, Axis.DiagonalRightToLeft };
             DirectionStreak streakData;
             for (int j = 0; j < allAxis.Length; j++)
             {
                 streakData = tile.GetStreakInAxis(allAxis[j]);
 
+                // totalBlues and totalReds are the streaks of blues and reds in each direction (will not count a streak if the colors are not connected)
                 totalBlues = streakData.blues;
                 totalReds = streakData.reds;
 
@@ -580,185 +596,13 @@ public class GameHandler : MonoBehaviour
                 else if(totalBlues == 3 && streakData.bluesMax >= 4 && streakData.bluesBlocked == true) scoreDef *= 50; // if we have e r r r b will be worth less than e r r r e  (e = empty)
 
 
-                // totalBlues and totalReds are the streaks of blues and reds in each direction
-                // usually first time added can be low not more than 4 on streak, since 5 is a win/lose (if one side) anyway
                 tile.attackScore = scoreAtt >= tile.attackScore ? scoreAtt : tile.attackScore;
                 tile.defenceScore = scoreDef >= tile.defenceScore ? scoreDef : tile.defenceScore;
 
                 int newFinalScore = tile.attackScore >= tile.defenceScore ? tile.attackScore : tile.defenceScore;
 
                 tile.finalScore = newFinalScore >= tile.finalScore ? newFinalScore : tile.finalScore;
-                //if (streakData.emptyNear) tile.finalScore *= 2;
             }
-
-            #region OLD
-            //for (int k = 0; k < 8; k++) // Go through the side lists
-            //{
-
-                
-            //    switch (k)
-            //    {
-            //        case 0:
-            //            directionList = tile.leftTiles;
-            //            side = -1;
-            //            clear = false;
-            //            break;
-            //        case 1:
-            //            directionList = tile.rightTiles;
-            //            side = 1;
-            //            clear = true;
-            //            break;
-            //        case 2:
-            //            directionList = tile.upTiles;
-            //            clear = false;
-            //            side = 1;
-            //            break;
-            //        case 3:
-            //            directionList = tile.downTiles;
-            //            side = -1;
-            //            clear = true;
-            //            break;
-            //        case 4:
-            //            directionList = tile.northEastTiles;
-            //            clear = false;
-            //            side = 1;
-            //            break;
-            //        case 5:
-            //            directionList = tile.southWestTiles; 
-            //            clear = true;
-            //            side = -1;
-            //            break;
-            //        case 6:
-            //            directionList = tile.northWestTiles;
-            //            clear = false;
-            //            side = -1;
-            //            break;
-            //        case 7:
-            //            directionList = tile.southEastTiles;
-            //            clear = true;
-            //            side = 1;
-            //            break;
-            //    }
-            //    bool brokenRed = false;//per direction
-            //    bool brokenBlue = false;//per direction
-
-            //    for (int j = 0; j < directionList.Count; j++)
-            //    {
-            //        if (tile != directionList[j]) // a tmplist is one of the lists of the neigbouring tiles in each direction, tiles to the left and to the right have their own lists. etc..
-            //        {
-            //            if (directionList[j].Owner == Player.None)
-            //            {
-            //                brokenBlue = true;
-            //                brokenRed = true;
-            //                if (!streakEndRed) minDoableStreakRed++;
-            //                if (!streakEndBlue) minDoableStreakBlue++;
-
-            //            }
-            //            if (directionList[j].Owner == Player.Blue) //AI
-            //            {
-            //                brokenRed = true;
-            //                streakEndRed = true;
-
-            //                if (!brokenBlue)
-            //                {
-            //                    if (side == 1)
-            //                    {
-            //                        bluesCounterRight++;
-            //                    }
-            //                    else if (side == -1)
-            //                    {
-            //                        bluesCounterLeft++;
-            //                    }
-            //                    minDoableStreakBlue++;
-            //                }
-
-
-            //            }
-            //            if (directionList[j].Owner == Player.Red) //Human
-            //            {
-            //                brokenBlue = true;
-            //                streakEndBlue = true;
-
-            //                if (!brokenRed)
-            //                {
-            //                    if (side == 1)
-            //                    {
-            //                        redsCounterRight++;
-            //                    }
-            //                    else if (side == -1)
-            //                    {
-            //                        redsCounterLeft++;
-            //                    }
-            //                    minDoableStreakRed++;
-            //                }
-            //            }
-            //        }
-            //    }
-
-
-
-
-            //    // Taking the Highest score ever
-
-            //    //if (clear)
-            //    //{
-            //    //    totalReds = redsCounterLeft + redsCounterRight;
-            //    //    totalBlues = bluesCounterLeft + bluesCounterRight;
-
-
-
-            //    //    tile.streakBlue = totalBlues >= tile.streakBlue ? totalBlues : tile.streakBlue;//debuging
-            //    //    tile.streakRed = totalReds >= tile.streakRed ? totalReds : tile.streakRed;
-
-
-            //    //    int scoreDef = totalReds * defenceScoreModifier;
-            //    //    int scoreAtt = totalBlues * attackScoreModifier;
-
-            //    //    if (totalBlues >= 4)
-            //    //    {
-            //    //        tile.winningTile = true; // This will make the tile picked anyway
-            //    //        Debug.Log("Winning Tile");
-            //    //        return tile; // no need to try
-            //    //    }
-
-            //    //    if (totalReds >= 3 /*&& minDoableStreakRed > 3*/)
-            //    //    {
-            //    //        //a must def tile
-            //    //        //will make it ignore the modifiers
-            //    //        tile.mustDefendTile = true;
-            //    //    }
-
-
-            //    //    // if a almost win or player played a 3, then score is multiplied by 100
-            //    //    if (totalReds >= 3 && totalReds < 4 /*&& minDoableStreakRed >= 3*/) scoreDef *= 100;
-            //    //    if (totalBlues >= 3 && totalBlues < 4 /*&& minDoableStreakBlue >= 3*/) scoreAtt *= 100;
-            //    //    //This ignores the scores
-
-            //    //    // totalBlues and totalReds are the streaks of blues and reds in each direction
-            //    //    // usually first time added can be low not more than 4 on streak, since 5 is a win/lose (if one side) anyway
-            //    //    tile.attackScore = scoreAtt >= tile.attackScore ? scoreAtt : tile.attackScore;
-            //    //    tile.defenceScore = scoreDef >= tile.defenceScore ? scoreDef : tile.defenceScore;
-
-            //    //    int newFinalScore = tile.attackScore >= tile.defenceScore ? tile.attackScore : tile.defenceScore;
-
-
-            //    //    tile.finalScore = newFinalScore >= tile.finalScore ? newFinalScore : tile.finalScore;
-
-            //    //    minDoableStreakRed = 0;
-            //    //    minDoableStreakBlue = 0;
-            //    //    bluesCounterLeft = 0;
-            //    //    redsCounterLeft = 0;
-            //    //    bluesCounterRight = 0;
-            //    //    redsCounterRight = 0;
-            //    //    streakEndRed = false;
-            //    //    streakEndBlue = false;
-            //    //}
-
-            //    //clear for next direction..
-
-            //}
-            #endregion
-
 
         }
 
@@ -768,17 +612,12 @@ public class GameHandler : MonoBehaviour
 
 
         tile = unplayedTiles[0];
-        //now all tiles have score. we collect them who have the same high score ina list to pick a random highest level pick.. 
-        //note def modifier if was larger than attack mod, it will always favor defending on winning move.
+        //now all tiles have score. we collect those who have the same high score in a list to pick a random highest level pick.. 
+        //note def modifier if was larger than attack mod, it will always favor defending on winning move (I think).
 
 
         for (int i = 0; i < unplayedTiles.Count; i++)
         {
-            //if(unplayedTiles[i].winningTile == true)
-            //{
-            //    tile = unplayedTiles[i]; // will never get in here
-            //    break;
-            //}
             
             if (unplayedTiles[i].finalScore >= tile.finalScore)
             {
@@ -789,8 +628,8 @@ public class GameHandler : MonoBehaviour
         // if not a winning tile already
         if(tile.winningTile == false)
         {
-            List<Tile> playableTiles = new List<Tile>();
-            List<Tile> mustPlayTiles = new List<Tile>();
+            List<Tile> playableTiles = new List<Tile>(); // collecting must plays and best tiles to play
+            List<Tile> mustPlayTiles = new List<Tile>(); //
             for (int i = 0; i < unplayedTiles.Count; i++)
             {
                 if (unplayedTiles[i].finalScore >= tile.finalScore)
@@ -805,11 +644,10 @@ public class GameHandler : MonoBehaviour
                 }
             }
 
-            if(mustPlayTiles.Count > 0)
+            if(mustPlayTiles.Count > 0)// If we have those , we dont care about the rest
             {
                 tile = mustPlayTiles[0];
                 Debug.Log("mustPlayTiles " + mustPlayTiles.Count);
-                //tile = mustPlayTiles.GetRandomValue();
                 for (int i = 0; i < mustPlayTiles.Count; i++)
                 {
                     if (mustPlayTiles[i].streakRed >= tile.streakRed) // get the tile with highest streak to be the most important to play if we will lose
@@ -820,7 +658,6 @@ public class GameHandler : MonoBehaviour
             }
             else if(playableTiles.Count > 0)
             {
-                //Debug.Log("playableTiles " + playableTiles.Count);
                 tile = playableTiles.GetRandomValue();
             }
 
@@ -834,7 +671,6 @@ public class GameHandler : MonoBehaviour
     public void DebugTile(Tile tile, bool playerclicked = false)
     {
         if (!fullDebug) return;
-        //if (!fullDebug) return;
         string tileNames = "AI tile\n";
         if (playerclicked) tileNames = "Player Clk\n";
 
