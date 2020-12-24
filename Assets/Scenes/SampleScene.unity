@@ -1432,7 +1432,7 @@ MonoBehaviour:
   cameraDestentation: {fileID: 1951261118}
   moveSpeed: 2.5
   attackScoreModifier: 2
-  defenceScoreModifier: 3
+  defenceScoreModifier: 2
   emptyScoreModifier: 0
   ballDropSpeed: 0.2
   debug: 0
