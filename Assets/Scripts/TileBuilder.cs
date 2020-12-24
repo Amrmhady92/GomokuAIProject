@@ -103,39 +103,39 @@ public class TileBuilder : MonoBehaviour
             //tile.downTiles = tiles.FindAll((t => t.x == tile.x && t.z > tile.z));
 
             Tile temp;
-            for (int j = 1; j < 5; j++)
+            for (int j = 1; j < 6; j++)
             {
 
                 temp = tiles.Find(t => (t.z == tile.z && t.x == tile.x - j));
-                if (temp != null) tile.leftTiles.Add(temp);
+                if (temp != null && tile != temp) tile.leftTiles.Add(temp);
                 temp = null;
 
                 temp = tiles.Find(t => (t.z == tile.z && t.x == tile.x + j));
-                if (temp != null) tile.rightTiles.Add(temp);
+                if (temp != null && tile != temp) tile.rightTiles.Add(temp);
                 temp = null;
 
                 temp = tiles.Find(t => (t.x == tile.x && t.z == tile.z + j));
-                if (temp != null) tile.downTiles.Add(temp);
+                if (temp != null && tile != temp) tile.downTiles.Add(temp);
                 temp = null;
 
                 temp = tiles.Find(t => (t.x == tile.x && t.z == tile.z - j));
-                if (temp != null) tile.upTiles.Add(temp);
+                if (temp != null && tile != temp) tile.upTiles.Add(temp);
                 temp = null;
 
                 temp = tiles.Find(t => (t.x == tile.x - j && t.z == tile.z - j && t.x != tile.x && t.z != tile.z));
-                if (temp != null) tile.northWestTiles.Add(temp);
+                if (temp != null && tile != temp) tile.northWestTiles.Add(temp);
                 temp = null;
                 
                 temp = tiles.Find(t => (t.x == tile.x + j && t.z == tile.z - j && t.x != tile.x && t.z != tile.z));
-                if (temp != null) tile.northEastTiles.Add(temp);
+                if (temp != null && tile != temp) tile.northEastTiles.Add(temp);
                 temp = null;
                 
                 temp = tiles.Find(t => (t.x == tile.x + j && t.z == tile.z + j && t.x != tile.x && t.z != tile.z));
-                if (temp != null) tile.southEastTiles.Add(temp);
+                if (temp != null && tile != temp) tile.southEastTiles.Add(temp);
                 temp = null;
                 
                 temp = tiles.Find(t => (t.x == tile.x - j && t.z == tile.z + j && t.x != tile.x && t.z != tile.z));
-                if (temp != null) tile.southWestTiles.Add(temp);
+                if (temp != null && tile != temp) tile.southWestTiles.Add(temp);
                 temp = null;
             }
             
