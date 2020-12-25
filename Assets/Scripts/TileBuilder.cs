@@ -12,15 +12,9 @@ public class TileBuilder : MonoBehaviour
     public float objectSize = 1;
     public Pooler pooler;
 
-    //public bool createGridOnStart = true;
     private GameObject cursor;
     //public List<Tile> tiles;
 
-    void Start()
-    {
-        //tiles = new List<Tile>();
-        //if (createGridOnStart) CreateGrid(new List<Tile>());
-    }
 
 
     public List<Tile> CreateGrid(List<Tile> tiles)

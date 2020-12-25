@@ -140,7 +140,7 @@ public class Tile : MonoBehaviour
         }
     }
 
-    private void OnMouseEnter()
+    private void OnMouseOver()
     {
         if (hoverEffect != null && 
             Owner == Player.None &&
@@ -244,11 +244,11 @@ public class Tile : MonoBehaviour
                             {
                                 case Player.Red:
                                     counts.redsMax++;
-                                    counts.redsBlocked = false;
+                                    counts.redsSealed = false;
                                     break;
                                 case Player.Blue:
                                     counts.bluesMax++;
-                                    counts.bluesBlocked = false;
+                                    counts.bluesSealed = false;
                                     break;
                             }
                             broken = true;
@@ -278,10 +278,10 @@ public class Tile : MonoBehaviour
                             switch (firstEncounter)
                             {
                                 case Player.Red:
-                                    if (!broken) counts.redsBlocked = true;
+                                    if (!broken) counts.redsSealed = true;
                                     break;
                                 case Player.Blue:
-                                    if (!broken) counts.bluesBlocked = true;
+                                    if (!broken) counts.bluesSealed = true;
                                     break;
                             }
                             break;
@@ -351,6 +351,21 @@ public class Tile : MonoBehaviour
                         else
                         if (tmpDirLst[i].Owner != firstEncounter && firstEncounter != Player.None)
                         {
+                            if (i > 0 && tmpDirLst[i - 1].Owner != Player.None)
+                            {
+                                switch (firstEncounter)
+                                {
+                                    case Player.Red:
+                                        //counts.reds++;
+                                        counts.redsSealed = true;
+                                        break;
+                                    case Player.Blue:
+                                        //counts.blues++;
+                                        counts.bluesSealed = true;
+                                        break;
+                                }
+                            }
+                                
                             break;
                         }
 
@@ -360,6 +375,9 @@ public class Tile : MonoBehaviour
             }
         }
 
+
+        if (counts.reds >= 2) counts.longRed = true;
+        if (counts.blues >= 2) counts.longBlue = true;
 
         return counts;
     }
@@ -399,13 +417,26 @@ public class Tile : MonoBehaviour
         DirectionStreak countsLeft = GetStreakInDirection(left);
         DirectionStreak countsRight = GetStreakInDirection(right);
 
+        //Commented code was more memory effecient I guess, but less readable? was going to reuse countsLeft and return it after I store the end values in it
+        //countsLeft.reds += countsRight.reds;
+        //countsLeft.blues += countsRight.blues;
+        //countsLeft.redsMax += countsRight.redsMax;
+        //countsLeft.bluesMax += countsRight.bluesMax;
+        //countsLeft.longRed = (countsLeft.reds >= 2 || countsRight.reds >= 2); 
+        //countsLeft.longBlue = (countsLeft.blues >= 2 || countsRight.blues >= 2);
 
-        countsLeft.reds += countsRight.reds;
-        countsLeft.blues += countsRight.blues;
-        countsLeft.redsMax += countsRight.redsMax;
-        countsLeft.bluesMax += countsRight.bluesMax;
+        //countsLeft.bluesSealed |= countsRight.bluesSealed;
+        //countsLeft.redsSealed |= countsRight.redsSealed;
 
-        return countsLeft;
+        return new DirectionStreak
+            (
+            reds: countsLeft.reds + countsRight.reds,
+            blues: countsLeft.blues + countsRight.blues,
+            redsMax: countsLeft.redsMax + countsRight.redsMax,
+            bluesMax: countsLeft.bluesMax + countsRight.bluesMax,
+            longRed: (countsLeft.longRed || countsRight.longRed), 
+            longBlue: (countsLeft.longBlue || countsRight.longBlue)
+            ) ;
 
     }
 

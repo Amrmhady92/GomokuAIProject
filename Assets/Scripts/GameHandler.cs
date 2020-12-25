@@ -36,20 +36,25 @@ public struct DirectionStreak
     public int redsMax;
     public int bluesMax;
 
-    public bool redsBlocked;
-    public bool bluesBlocked;
-   // public bool emptyNear;
+    public bool redsSealed;
+    public bool bluesSealed;
+
+    public bool longRed;
+    public bool longBlue;
+    // public bool emptyNear;
 
 
 
-    public DirectionStreak(int reds = 0, int blues =0 , int redsMax = 0, int bluesMax = 0 , bool redsBlocked = false, bool bluesBlocked = false)
+    public DirectionStreak(int reds = 0, int blues =0 , int redsMax = 0, int bluesMax = 0 , bool redsBlocked = false, bool bluesBlocked = false, bool longRed = false, bool longBlue = false)
     {
         this.reds = reds;
         this.blues = blues;
         this.redsMax = redsMax;
         this.bluesMax = bluesMax;
-        this.redsBlocked = redsBlocked;
-        this.bluesBlocked = bluesBlocked;
+        this.redsSealed = redsBlocked;
+        this.bluesSealed = bluesBlocked;
+        this.longRed = longRed;
+        this.longBlue = longBlue;
     }
 }
 
@@ -513,7 +518,7 @@ public class GameHandler : MonoBehaviour
     private void AIPlay()
     {
 
-        Tile tileToPlay = ScoreTiles();
+        Tile tileToPlay = GetBestTile();
 
 
         if (tileToPlay != null) 
@@ -534,13 +539,16 @@ public class GameHandler : MonoBehaviour
 
     }
 
-    private Tile ScoreTiles()
+    private void ScoreTiles()
     {
         //check every empty tile for possible plays in each direction and give score accordingly
         //Tile with best score is returned
+        Tile tile;
+        int totalBlues;
+        int totalReds;
+        int numberOfStreaksAboveTwoPerSideReds;
+        int numberOfStreaksAboveTwoPerSideBlues;
 
-
-        Tile tile = null;
         //Set Empty Tiles Scores
         for (int i = 0; i < unplayedTiles.Count; i++)
         {
@@ -559,11 +567,13 @@ public class GameHandler : MonoBehaviour
             tile.winningTile = false;
 
          
-            int totalBlues;
-            int totalReds;
 
             Axis[] allAxis = { Axis.Horizontal, Axis.Vertical, Axis.DiagonalLeftToRight, Axis.DiagonalRightToLeft };
             DirectionStreak streakData;
+            numberOfStreaksAboveTwoPerSideReds = 0;
+            numberOfStreaksAboveTwoPerSideBlues = 0;
+
+
             for (int j = 0; j < allAxis.Length; j++)
             {
                 streakData = tile.GetStreakInAxis(allAxis[j]);
@@ -571,12 +581,14 @@ public class GameHandler : MonoBehaviour
                 // totalBlues and totalReds are the streaks of blues and reds in each direction (will not count a streak if the colors are not connected)
                 totalBlues = streakData.blues;
                 totalReds = streakData.reds;
+                numberOfStreaksAboveTwoPerSideReds = streakData.longRed ? numberOfStreaksAboveTwoPerSideReds + 1 : numberOfStreaksAboveTwoPerSideReds;
+                numberOfStreaksAboveTwoPerSideBlues = streakData.longBlue ? numberOfStreaksAboveTwoPerSideBlues + 1 : numberOfStreaksAboveTwoPerSideBlues;
 
                 if (totalBlues >= 4) // Found Win no need to continue
                 {
                     tile.winningTile = true; // This will make the tile picked anyway
                     Debug.Log("Found Winning Tile");
-                    return tile; //leave the scoring
+                    return; //leave the scoring
                 }
 
 
@@ -588,7 +600,12 @@ public class GameHandler : MonoBehaviour
 
 
                 //This ignores the scores
-                if (totalReds >= 3 && streakData.redsMax >= 4 && streakData.redsBlocked == false) //must catch a 3 before player makes 4 // if streak max is less that 4 then its useless to def // also if blocked is worth less
+                if (totalReds >= 4 && streakData.redsMax >= 4) // if its 4 we dont care about sealed or not, it must be stopped (Second most important tile after A winning tile)
+                {
+                    tile.mustDefendTile = true;
+                }
+                else
+                if (totalReds >= 3 && streakData.redsMax >= 4 && streakData.redsSealed == false) //must catch a 3 before player makes 4 // if streak max is less that 4 then its useless to def // also if blocked is worth less
                 {
                     //a must def tile
                     //will make it ignore the modifiers
@@ -599,21 +616,28 @@ public class GameHandler : MonoBehaviour
                     Debug.Log("Not scary");
                 }
 
+      
                 // if a almost win or player played a 3, then score is multiplied by 100
-                if (totalReds == 3 && streakData.redsMax >= 4 && streakData.redsBlocked == false) scoreDef *= 100;
-                else if(totalReds == 3 && streakData.redsMax >= 4 && streakData.redsBlocked == true) scoreDef *= 50;
+                if (totalReds == 3 && streakData.redsMax >= 4 && streakData.redsSealed == false) scoreDef *= 100;
+                else if(totalReds == 3 && streakData.redsMax >= 4 && streakData.redsSealed == true) scoreDef *= 50;
 
-                if (totalBlues == 3 && streakData.bluesMax >= 4 && streakData.bluesBlocked == false) scoreAtt *= 100;
-                else if(totalBlues == 3 && streakData.bluesMax >= 4 && streakData.bluesBlocked == true) scoreDef *= 50; // if we have e r r r b will be worth less than e r r r e  (e = empty)
+                if (totalBlues == 3 && streakData.bluesMax >= 4 && streakData.bluesSealed == false) scoreAtt *= 100;
+                else if(totalBlues == 3 && streakData.bluesMax >= 4 && streakData.bluesSealed == true) scoreDef *= 50; // if we have e r r r b will be worth less than e r r r e  (e = empty)
 
+  
 
                 tile.attackScore = scoreAtt >= tile.attackScore ? scoreAtt : tile.attackScore;
                 tile.defenceScore = scoreDef >= tile.defenceScore ? scoreDef : tile.defenceScore;
 
-                int newFinalScore = tile.attackScore >= tile.defenceScore ? tile.attackScore : tile.defenceScore;
-
-                tile.finalScore = newFinalScore >= tile.finalScore ? newFinalScore : tile.finalScore;
+                
             }
+
+            //Extra points for tiles that are inside different streaks i.e. has 2 up 1 down and 1 left and 2 right , will have 2 a 3-streak so it should be better than a tile that has only 1 3-streak in one direction. 
+            tile.attackScore += (numberOfStreaksAboveTwoPerSideBlues * 10);
+            tile.defenceScore += (numberOfStreaksAboveTwoPerSideReds * 10);
+
+            int newFinalScore = tile.attackScore >= tile.defenceScore ? tile.attackScore : tile.defenceScore;
+            tile.finalScore = newFinalScore >= tile.finalScore ? newFinalScore : tile.finalScore;
 
         }
 
@@ -622,14 +646,19 @@ public class GameHandler : MonoBehaviour
 
 
 
-        tile = unplayedTiles[0];
+        
+    }
+
+    private Tile GetBestTile()
+    {
+        ScoreTiles();
+        Tile tile = unplayedTiles[0];
         //now all tiles have score. we collect those who have the same high score in a list to pick a random highest level pick.. 
         //note def modifier if was larger than attack mod, it will always favor defending on winning move (I think).
-
-
         for (int i = 0; i < unplayedTiles.Count; i++)
         {
-            
+            if (unplayedTiles[i].winningTile) return unplayedTiles[i]; // end of search
+
             if (unplayedTiles[i].finalScore >= tile.finalScore)
             {
                 tile = unplayedTiles[i];
@@ -637,7 +666,7 @@ public class GameHandler : MonoBehaviour
         }
         // now we got the max value ever, now we make a list of any tile that has the same value or even more as a precaution
         // if not a winning tile already
-        if(tile.winningTile == false)
+        if (tile.winningTile == false)
         {
             List<Tile> playableTiles = new List<Tile>(); // collecting must plays and best tiles to play
             List<Tile> mustPlayTiles = new List<Tile>(); //
@@ -655,7 +684,7 @@ public class GameHandler : MonoBehaviour
                 }
             }
 
-            if(mustPlayTiles.Count > 0)// If we have those , we dont care about the rest
+            if (mustPlayTiles.Count > 0)// If we have those , we dont care about the rest
             {
                 tile = mustPlayTiles[0];
                 if (debug) Debug.Log("mustPlayTiles " + mustPlayTiles.Count);
@@ -667,14 +696,14 @@ public class GameHandler : MonoBehaviour
                     }
                 }
             }
-            else if(playableTiles.Count > 0)
+            else if (playableTiles.Count > 0)
             {
                 tile = playableTiles.GetRandomValue();
             }
 
         }
 
-       
+
         // Done
         return tile;
     }
