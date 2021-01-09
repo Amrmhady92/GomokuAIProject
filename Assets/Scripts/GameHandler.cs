@@ -652,6 +652,7 @@ public class GameHandler : MonoBehaviour
     private Tile GetBestTile()
     {
         ScoreTiles();
+
         Tile tile = unplayedTiles[0];
         //now all tiles have score. we collect those who have the same high score in a list to pick a random highest level pick.. 
         //note def modifier if was larger than attack mod, it will always favor defending on winning move (I think).
